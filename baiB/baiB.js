@@ -1,69 +1,90 @@
-const api_url =
-   "https://opentdb.com/api.php?amount=5&category=21&difficulty=easy&type=multiple";
-let myQuestions = [];
-
-function buildQuiz() {
-   const output = [];
-   myQuestions.forEach(
-      (currentQuestion, questionNumber) => {
-         const answers = [];
-         for (letter in currentQuestion.answers) {
-            answers.push(
-               `<label>
-               <input type="radio" name="question${questionNumber}" value="${letter}">
-               ${letter} :
-               ${currentQuestion.answers[letter]}
-             </label>`
-            );
-         }
-         output.push(
-            `<div class="question"> ${currentQuestion.question} </div>
-           <div class="answers"> ${answers.join('')} </div>`
-         );
-      }
-   );
-   quizContainer.innerHTML = output.join('');
-}
-
-function showResults() {
-
-
-   const answerContainers = quizContainer.querySelectorAll('.answers');
-
-   let numCorrect = 0;
-
-   myQuestions.forEach((currentQuestion, questionNumber) => {
-      const answerContainer = answerContainers[questionNumber];
-      const selector = `input[name=question${questionNumber}]:checked`;
-      const userAnswer = (answerContainer.querySelector(selector) || {}).value;
-
-      if (userAnswer === currentQuestion.correctAnswer) {
-         numCorrect++;
-         answerContainers[questionNumber].style.color = 'lightgreen';
-      }
-      else {
-         answerContainers[questionNumber].style.color = 'red';
-      }
-   });
-
-   resultsContainer.innerHTML = `${numCorrect} out of ${myQuestions.length}`;
-}
-
-
+const API_URL = "https://opentdb.com/api.php?amount=5&category=21&difficulty=easy&type=multiple";
 const quizContainer = document.getElementById('quiz');
-const resultsContainer = document.getElementById('results');
 const submitButton = document.getElementById('submit');
 
+// load and set up the app
 async function getapi(url) {
    const response = await fetch(url);
-   var data = await response.json();
+   let data = await response.json();
 
-   myQuestions = data.results;
+   let res = renderQuestionData(data.results);
 
-   console.log(myQuestions)
-   buildQuiz();
+   // show the result from api
+   console.log(res);
+   buildQuiz(res);
 
-   submitButton.addEventListener('click', showResults);
+   // check the answer when submit answers
+   submitButton.addEventListener('click', () => showResults(res));
+}
+getapi(API_URL);
+
+
+// FUNCTION
+// show quizz
+function buildQuiz(questionData) {
+   questionData.map((question, index) => {
+      // console.log(question, index)
+      createQuestion({ index, question })
+   })
+}
+function createQuestion({ index, question }) {
+   const quizzWrapper = document.createElement("div")
+   quizzWrapper.classList.add('quiz-container');
+   quizzWrapper.innerHTML = `
+      <h3>${index + 1}. ${question.question}</h3>
+      <div class="answers answers_${index + 1}">
+         ${createAnswer(index + 1, question.answers)}
+      </div>
+      <label id="quiz_result_${index + 1}"></label>`;
+   document.querySelector('#quiz').appendChild(quizzWrapper);
+}
+function createAnswer(index, answers) {
+   let answerLabel = '';
+   answers.map((answer) => (
+      answerLabel += `<label>
+         <input type="radio" name="question_${index}" value="${answer}"/> ${answer}
+      </label>`
+   ));
+   return answerLabel;
 }
 
-getapi(api_url);
+function showResults(questionData) {
+   let numCorrect = 0;
+   const answerContainers = quizContainer.querySelectorAll('.answers');
+   // console.log(answerContainers);
+   questionData.forEach((thisQuestion, index) => {
+      // user answer
+      const answerContainer = answerContainers[index];
+      const selector = `input[name=question_${index + 1}]:checked`;
+      const userAnswer = (answerContainer.querySelector(selector) || {}).value;
+
+      // check the answer and show the correct ones
+      if (userAnswer === thisQuestion.correct_answer) {
+         numCorrect++;
+         answerContainers[index].style.color = 'lightgreen';
+      } else {
+         answerContainers[index].style.color = 'red';
+         const quizResult = document.getElementById(`quiz_result_${index + 1}`);
+         quizResult.innerText = '==>Đáp án: ' + thisQuestion.correct_answer;
+      }
+   });
+   let announce = `Bạn đã trả lời đúng:  ${numCorrect}/${questionData.length}\n ===> Số điểm: ${numCorrect * 10}/${questionData.length * 10}`;
+   alert(announce);
+}
+
+// utils
+renderQuestionData = (data) => {
+   return data.map((question) => {
+      return ({
+         ...question,
+         answers: randomAnswers([
+            ...question.incorrect_answers,
+            question.correct_answer
+         ])
+      })
+   });
+}
+// small function to randomize the answers to the question
+randomAnswers = (array) => {
+   return [...array].sort(() => Math.random() - 0.5);
+}
