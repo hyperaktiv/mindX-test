@@ -11,14 +11,19 @@
 
 <body>
 
-   <h1>Quizz App - MindX</h1>
-   <button id="reset" class="btn">Reset Game</button>
-
    <div class="quiz-container">
+      <h1 class="title">Quizz App - MindX</h1>
+      <div class="buttonContainer">
+         <button id="reset" class="btn" onclick="window.location.reload();">Reset Game</button>
+      </div>
+
       <div id="quiz"></div>
+      <div class="buttonContainer">
+         <button id="submit" class="btn">Submit Quiz</button>
+      </div>
+
    </div>
 
-   <button id="submit" class="btn">Submit Quiz</button>
 
    <script src="./baiB.js"></script>
 </body>

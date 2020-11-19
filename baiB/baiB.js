@@ -2,6 +2,7 @@ const API_URL = "https://opentdb.com/api.php?amount=5&category=21&difficulty=eas
 const quizContainer = document.getElementById('quiz');
 const submitButton = document.getElementById('submit');
 
+
 // load and set up the app
 async function getapi(url) {
    const response = await fetch(url);
